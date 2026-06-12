@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Infrastructure Automation Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+
+    <nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-wider text-cyan-400">⚡ CloudOps Controller</h1>
+        <div id="cost-display"
+            class="bg-slate-900 px-4 py-1.5 rounded-lg border border-slate-600 text-sm font-semibold text-emerald-400">
+            Cost This Month: Loading...
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+            <h2 class="text-lg font-bold mb-4 text-cyan-300">🖥️ EC2 Compute Engine</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">AMI ID</label>
+                    <input id="ec2-ami" type="text" value="ami-0c55d159cbfafe1f0"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-400">
+                </div>
+                <button onclick="launchEC2()"
+                    class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 rounded text-sm transition-all shadow-md">Launch
+                    Instance</button>
+                <hr class="border-slate-700 my-2">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Target Instance ID</label>
+                    <input id="ec2-target-id" type="text" placeholder="i-xxxxxxxxxxxxxxxxx"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-400">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="stopEC2()"
+                        class="bg-rose-600 hover:bg-rose-500 font-semibold py-2 rounded text-sm transition-all shadow-md">Stop</button>
+                    <button onclick="checkCPU()"
+                        class="bg-slate-700 hover:bg-slate-600 font-semibold py-2 rounded text-sm transition-all shadow-md">Check
+                        CPU %</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+            <h2 class="text-lg font-bold mb-4 text-emerald-400">🪣 Simple Storage Service (S3)</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Unique Bucket Name</label>
+                    <input id="s3-name" type="text" placeholder="my-unique-portfolio-bucket"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-400">
+                </div>
+                <button onclick="createBucket()"
+                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded text-sm transition-all shadow-md">Create
+                    S3 Bucket</button>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+            <h2 class="text-lg font-bold mb-4 text-purple-400">👤 Identity & Access (IAM)</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">New Username</label>
+                    <input id="iam-name" type="text" placeholder="intern-dev-01"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-400">
+                </div>
+                <button onclick="createIAMUser()"
+                    class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 rounded text-sm transition-all shadow-md">Provision
+                    User</button>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl md:col-span-2 lg:col-span-3">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-amber-400 m-0">📋 Infrastructure Audit Log (SQLite Active)</h2>
+                <button onclick="clearLogs()"
+                    class="bg-slate-700 hover:bg-rose-600 text-xs text-slate-300 hover:text-white font-semibold px-3 py-1.5 rounded transition-all shadow-md">
+                    Clear Logs
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-slate-400 uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="p-3">Action</th>
+                            <th class="p-3">Resource Target</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for log in logs %}
+                        <tr class="hover:bg-slate-750 transition-all">
+                            <td class="p-3 font-semibold">{{ log[0] }}</td>
+                            <td class="p-3 text-slate-400 font-mono text-xs">{{ log[1] }}</td>
+                            <td class="p-3">
+                                <span
+                                    class="px-2 py-0.5 text-xs rounded font-bold {% if log[2]=='success' %}bg-emerald-950 text-emerald-400 border border-emerald-800{% else %}bg-rose-950 text-rose-400 border border-rose-800{% endif %}">
+                                    {{ log[2] }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-xs text-slate-400">{{ log[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast"
+        class="hidden fixed bottom-5 right-5 bg-slate-800 border-l-4 p-4 rounded shadow-2xl max-w-sm transition-all z-50">
+        <p id="toast-text" class="text-sm font-medium"></p>
+    </div>
+
+    <script>
+        // Utilities
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const txt = document.getElementById('toast-text');
+            toast.className = `fixed bottom-5 right-5 bg-slate-800 border-l-4 p-4 rounded shadow-2xl max-w-sm z-50 ${isSuccess ? 'border-emerald-500 text-emerald-300' : 'border-rose-500 text-rose-300'}`;
+            txt.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+        }
+
+        // Fetch Total Costs on load
+        async function loadCost() {
+            try {
+                let res = await fetch('/api/monitor/cost');
+                let data = await res.json();
+                document.getElementById('cost-display').innerText = `Cost This Month: ${data.cost || '$0.00'}`;
+            } catch {
+                document.getElementById('cost-display').innerText = 'Cost Display: Offline';
+            }
+        }
+        window.onload = loadCost;
+
+        // Core API Call Triggers
+        async function launchEC2() {
+            let ami = document.getElementById('ec2-ami').value;
+            let res = await fetch('/api/ec2/launch', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ami })
+            });
+            let data = await res.json();
+            if (data.status === 'success') showToast(`Successfully spun up EC2: ${data.instance_id}`);
+            else showToast(`EC2 Launch Failed: ${data.message}`, false);
+        }
+
+        async function stopEC2() {
+            let instance_id = document.getElementById('ec2-target-id').value;
+            if (!instance_id) return showToast("Please input an instance ID first", false);
+            let res = await fetch('/api/ec2/stop', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instance_id })
+            });
+            let data = await res.json();
+            showToast(data.message, data.status === 'success');
+        }
+
+        async function checkCPU() {
+            let instance_id = document.getElementById('ec2-target-id').value;
+            if (!instance_id) return showToast("Please input an instance ID first", false);
+            let res = await fetch(`/api/monitor/cpu/${instance_id}`);
+            let data = await res.json();
+            if (data.status === 'success') showToast(`Current CPU Allocation: ${data.cpu}%`);
+            else showToast(data.message, false);
+        }
+
+        async function createBucket() {
+            let bucket_name = document.getElementById('s3-name').value;
+            let res = await fetch('/api/s3/create', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bucket_name })
+            });
+            let data = await res.json();
+            showToast(data.message, data.status === 'success');
+        }
+
+        async function createIAMUser() {
+            let username = document.getElementById('iam-name').value;
+            let res = await fetch('/api/iam/create', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            let data = await res.json();
+            if (data.status === 'success') showToast(`Successfully provisioned IAM User: ${data.user}`);
+            else showToast(data.message, false);
+        }
+
+        // Asynchronous Log Sweeper Controller Link
+        async function clearLogs() {
+            if (!confirm("Are you sure you want to permanently delete all local audit logs?")) return;
+
+            let res = await fetch('/api/logs/clear', { method: 'POST' });
+            let data = await res.json();
+
+            if (data.status === 'success') {
+                showToast(data.message);
+                setTimeout(() => { window.location.reload(); }, 1000);
+            } else {
+                showToast(data.message, false);
+            }
+        }
+    </script>
+</body>
+
+</html>
