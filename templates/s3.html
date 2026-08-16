@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}S3 · CloudOps Controller{% endblock %}
+
+{% block content %}
+<div class="panel rounded-lg pl-6 pr-5 py-5 shadow-lg max-w-xl" style="--accent: var(--s3);">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold tracking-wide" style="color: var(--s3);">S3 · Object Storage</h2>
+        <span class="module-tag">S3-02</span>
+    </div>
+    <div class="space-y-4">
+        <div>
+            <label class="block text-[11px] uppercase tracking-wider mb-1" style="color: var(--muted);">Unique Bucket
+                Name</label>
+            <input id="s3-name" type="text" placeholder="my-unique-portfolio-bucket"
+                class="mono field w-full rounded px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600"
+                style="--accent: var(--s3);">
+        </div>
+        <button onclick="createBucket()" class="btn-primary w-full text-slate-900 font-semibold py-2 rounded text-sm"
+            style="--accent: var(--s3);">
+            Create S3 Bucket
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function createBucket() {
+        let bucket_name = document.getElementById('s3-name').value;
+        let res = await fetch('/api/s3/create', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bucket_name })
+        });
+        let data = await res.json();
+        showToast(data.message, data.status === 'success');
+    }
+</script>
+{% endblock %}

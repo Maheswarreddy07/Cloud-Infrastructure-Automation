@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Audit Log · CloudOps Controller{% endblock %}
+
+{% block content %}
+<div class="term-window rounded-lg shadow-lg overflow-hidden">
+    <div class="term-chrome flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+                <span class="term-dot" style="background: var(--err);"></span>
+                <span class="term-dot" style="background: var(--amber);"></span>
+                <span class="term-dot" style="background: var(--ok);"></span>
+            </div>
+            <h2 class="text-sm font-semibold tracking-wide" style="color: var(--amber);">
+                Infrastructure Audit Log <span class="mono text-xs font-normal" style="color: var(--muted);">— sqlite:
+                    active</span>
+            </h2>
+        </div>
+        <button onclick="clearLogs()" class="text-xs font-semibold px-3 py-1.5 rounded transition-colors"
+            style="background: var(--panel); color: var(--muted); border: 1px solid var(--line);"
+            onmouseover="this.style.color='var(--err)'; this.style.borderColor='var(--err)';"
+            onmouseout="this.style.color='var(--muted)'; this.style.borderColor='var(--line)';">
+            Clear Logs
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead style="background: var(--bg); color: var(--muted);" class="uppercase text-[11px] tracking-wider">
+                <tr>
+                    <th class="p-3 font-medium">Action</th>
+                    <th class="p-3 font-medium">Resource Target</th>
+                    <th class="p-3 font-medium">Status</th>
+                    <th class="p-3 font-medium">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y" style="border-color: var(--line-soft);">
+                {% for log in logs %}
+                <tr class="transition-colors">
+                    <td class="p-3 font-semibold">{{ log[0] }}</td>
+                    <td class="p-3 mono text-xs" style="color: var(--muted);">{{ log[1] }}</td>
+                    <td class="p-3">
+                        <span class="mono px-2 py-0.5 text-[11px] rounded font-semibold border"
+                            style="{% if log[2]=='success' %}background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent);{% else %}background: color-mix(in srgb, var(--err) 14%, transparent); color: var(--err); border-color: color-mix(in srgb, var(--err) 40%, transparent);{% endif %}">
+                            {{ log[2] }}
+                        </span>
+                    </td>
+                    <td class="p-3 mono text-xs" style="color: var(--muted);">{{ log[3] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="p-6 text-center text-sm" style="color: var(--muted);">
+                        No actions logged yet — provision a resource to populate the audit trail.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function clearLogs() {
+        if (!confirm("Are you sure you want to permanently delete all local audit logs?")) return;
+        let res = await fetch('/api/logs/clear', { method: 'POST' });
+        let data = await res.json();
+        if (data.status === 'success') {
+            showToast(data.message);
+            setTimeout(() => { window.location.reload(); }, 1000);
+        } else {
+            showToast(data.message, false);
+        }
+    }
+</script>
+{% endblock %}

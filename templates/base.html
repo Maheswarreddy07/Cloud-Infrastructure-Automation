@@ -1,0 +1,270 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CloudOps Controller{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d13;
+            --panel: #10141c;
+            --panel-raised: #141924;
+            --line: #232a38;
+            --line-soft: #1a2029;
+            --text: #e7eaf0;
+            --muted: #6f7a8f;
+            --amber: #ff9d4d;
+            --ec2: #4fa8ff;
+            --s3: #34d9a8;
+            --iam: #c592ff;
+            --ok: #34d9a8;
+            --err: #ff6b81;
+        }
+
+        body {
+            font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.035) 1px, transparent 0);
+            background-size: 26px 26px;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            position: relative;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent, var(--line));
+        }
+
+        .module-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 2px 6px;
+        }
+
+        .field {
+            background: var(--bg);
+            border: 1px solid var(--line);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .field:focus {
+            outline: none;
+            border-color: var(--accent, var(--line));
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, var(--line)) 18%, transparent);
+        }
+
+        .btn-primary {
+            background: var(--accent, var(--line));
+            filter: brightness(1);
+            transition: filter .15s ease, transform .05s ease;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.12);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--ok);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent);
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .35;
+            }
+        }
+
+        .status-dot.live {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .term-window {
+            background: var(--panel);
+            border: 1px solid var(--line);
+        }
+
+        .term-chrome {
+            background: var(--panel-raised);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .term-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+        }
+
+        table thead th {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        tbody tr:hover {
+            background: var(--panel-raised);
+        }
+
+        #toast {
+            background: var(--panel-raised);
+            border: 1px solid var(--line);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            border: 1px solid transparent;
+            transition: background .15s ease, color .15s ease, border-color .15s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--panel-raised);
+            color: var(--text);
+        }
+
+        .nav-link.active {
+            background: var(--panel-raised);
+            color: var(--text);
+            border-color: var(--line);
+        }
+
+        .nav-link .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--line);
+            flex-shrink: 0;
+        }
+
+        .nav-link.active .dot {
+            background: var(--accent, var(--amber));
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body class="text-slate-100 min-h-screen">
+
+    <nav class="border-b px-6 py-4 flex flex-wrap gap-4 justify-between items-center"
+        style="border-color: var(--line); background: var(--panel);">
+        <div class="flex items-center gap-3">
+            <span class="status-dot live"></span>
+            <a href="{{ url_for('dashboard') }}" class="text-lg font-semibold tracking-wide"
+                style="color: var(--amber);">
+                CLOUDOPS<span class="text-slate-500">://</span>CONTROLLER
+            </a>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="module-tag hidden sm:inline">SESSION · LOCAL</span>
+            <div id="cost-display" class="mono px-3 py-1.5 rounded border text-xs font-medium"
+                style="background: var(--panel-raised); border-color: var(--line); color: var(--ok);">
+                Cost This Month: Loading...
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-5 p-6">
+
+        <aside class="md:w-56 flex-shrink-0">
+            <div class="panel rounded-lg p-3 space-y-1 sticky top-6" style="--accent: var(--amber);">
+                <a href="{{ url_for('dashboard') }}"
+                    class="nav-link {% if active_page == 'overview' %}active{% endif %}"
+                    style="--accent: var(--amber);">
+                    <span class="dot"></span> Overview
+                </a>
+                <a href="{{ url_for('ec2_page') }}" class="nav-link {% if active_page == 'ec2' %}active{% endif %}"
+                    style="--accent: var(--ec2);">
+                    <span class="dot"></span> EC2 · Compute
+                </a>
+                <a href="{{ url_for('s3_page') }}" class="nav-link {% if active_page == 's3' %}active{% endif %}"
+                    style="--accent: var(--s3);">
+                    <span class="dot"></span> S3 · Storage
+                </a>
+                <a href="{{ url_for('iam_page') }}" class="nav-link {% if active_page == 'iam' %}active{% endif %}"
+                    style="--accent: var(--iam);">
+                    <span class="dot"></span> IAM · Access
+                </a>
+                <a href="{{ url_for('logs_page') }}" class="nav-link {% if active_page == 'logs' %}active{% endif %}"
+                    style="--accent: var(--amber);">
+                    <span class="dot"></span> Audit Log
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-w-0">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div id="toast"
+        class="hidden fixed bottom-5 right-5 p-4 rounded-lg shadow-2xl max-w-sm transition-all z-50 border-l-4">
+        <p id="toast-text" class="text-sm font-medium mono"></p>
+    </div>
+
+    <script>
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const txt = document.getElementById('toast-text');
+            toast.className = `fixed bottom-5 right-5 p-4 rounded-lg shadow-2xl max-w-sm z-50 border-l-4`;
+            toast.style.background = 'var(--panel-raised)';
+            toast.style.borderLeftColor = isSuccess ? 'var(--ok)' : 'var(--err)';
+            txt.style.color = isSuccess ? 'var(--ok)' : 'var(--err)';
+            txt.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+        }
+
+        async function loadCost() {
+            try {
+                let res = await fetch('/api/monitor/cost');
+                let data = await res.json();
+                document.getElementById('cost-display').innerText = `Cost This Month: ${data.cost || '$0.00'}`;
+            } catch {
+                document.getElementById('cost-display').innerText = 'Cost Display: Offline';
+            }
+        }
+        window.addEventListener('load', loadCost);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

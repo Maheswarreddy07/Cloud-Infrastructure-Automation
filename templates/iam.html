@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}IAM · CloudOps Controller{% endblock %}
+
+{% block content %}
+<div class="panel rounded-lg pl-6 pr-5 py-5 shadow-lg max-w-xl" style="--accent: var(--iam);">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold tracking-wide" style="color: var(--iam);">IAM · Identity &amp; Access</h2>
+        <span class="module-tag">IAM-03</span>
+    </div>
+    <div class="space-y-4">
+        <div>
+            <label class="block text-[11px] uppercase tracking-wider mb-1" style="color: var(--muted);">New
+                Username</label>
+            <input id="iam-name" type="text" placeholder="intern-dev-01"
+                class="mono field w-full rounded px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600"
+                style="--accent: var(--iam);">
+        </div>
+        <button onclick="createIAMUser()" class="btn-primary w-full text-slate-900 font-semibold py-2 rounded text-sm"
+            style="--accent: var(--iam);">
+            Provision User
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function createIAMUser() {
+        let username = document.getElementById('iam-name').value;
+        let res = await fetch('/api/iam/create', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        let data = await res.json();
+        if (data.status === 'success') showToast(`Successfully provisioned IAM User: ${data.user}`);
+        else showToast(data.message, false);
+    }
+</script>
+{% endblock %}

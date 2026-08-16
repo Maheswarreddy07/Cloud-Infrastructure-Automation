@@ -8,7 +8,7 @@ class EC2Manager:
         self.region = session.region_name or "us-east-1"
         self.client = boto3.client('ec2', region_name=self.region)
 
-    def launch_instance(self, ami_id, instance_type="t2.micro"):
+    def launch_instance(self, ami_id, instance_type="t3.micro"):
         try:
             # 1. Strip standard whitespaces and replace common web non-breaking spaces
             clean_ami = ami_id.replace('\u00a0', '').strip()

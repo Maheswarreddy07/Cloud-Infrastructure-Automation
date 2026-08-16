@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}EC2 · CloudOps Controller{% endblock %}
+
+{% block content %}
+<div class="panel rounded-lg pl-6 pr-5 py-5 shadow-lg max-w-xl" style="--accent: var(--ec2);">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold tracking-wide" style="color: var(--ec2);">EC2 · Compute Engine</h2>
+        <span class="module-tag">EC2-01</span>
+    </div>
+    <div class="space-y-4">
+        <div>
+            <label class="block text-[11px] uppercase tracking-wider mb-1" style="color: var(--muted);">AMI ID</label>
+            <input id="ec2-ami" type="text" value="ami-0c55d159cbfafe1f0"
+                class="mono field w-full rounded px-3 py-2 text-sm text-slate-100" style="--accent: var(--ec2);">
+        </div>
+        <button onclick="launchEC2()" class="btn-primary w-full text-slate-900 font-semibold py-2 rounded text-sm"
+            style="--accent: var(--ec2);">
+            Launch Instance
+        </button>
+        <hr style="border-color: var(--line-soft);">
+        <div>
+            <label class="block text-[11px] uppercase tracking-wider mb-1" style="color: var(--muted);">Target Instance
+                ID</label>
+            <input id="ec2-target-id" type="text" placeholder="i-xxxxxxxxxxxxxxxxx"
+                class="mono field w-full rounded px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600"
+                style="--accent: var(--ec2);">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="stopEC2()" class="font-semibold py-2 rounded text-sm transition-colors"
+                style="background: color-mix(in srgb, var(--err) 16%, var(--panel)); color: var(--err); border: 1px solid color-mix(in srgb, var(--err) 40%, transparent);">
+                Stop
+            </button>
+            <button onclick="checkCPU()" class="font-semibold py-2 rounded text-sm transition-colors"
+                style="background: var(--panel-raised); color: var(--text); border: 1px solid var(--line);">
+                Check CPU %
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function launchEC2() {
+        let ami = document.getElementById('ec2-ami').value;
+        let res = await fetch('/api/ec2/launch', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ami })
+        });
+        let data = await res.json();
+        if (data.status === 'success') showToast(`Successfully spun up EC2: ${data.instance_id}`);
+        else showToast(`EC2 Launch Failed: ${data.message}`, false);
+    }
+
+    async function stopEC2() {
+        let instance_id = document.getElementById('ec2-target-id').value;
+        if (!instance_id) return showToast("Please input an instance ID first", false);
+        let res = await fetch('/api/ec2/stop', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instance_id })
+        });
+        let data = await res.json();
+        showToast(data.message, data.status === 'success');
+    }
+
+    async function checkCPU() {
+        let instance_id = document.getElementById('ec2-target-id').value;
+        if (!instance_id) return showToast("Please input an instance ID first", false);
+        let res = await fetch(`/api/monitor/cpu/${instance_id}`);
+        let data = await res.json();
+        if (data.status === 'success') showToast(`Current CPU Allocation: ${data.cpu}%`);
+        else showToast(data.message, false);
+    }
+</script>
+{% endblock %}
